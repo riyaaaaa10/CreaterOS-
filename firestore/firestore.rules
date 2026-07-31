@@ -1,0 +1,16 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // P0 design: all reads/writes go through the Express backend via the
+    // Firebase Admin SDK, which bypasses these rules entirely. The frontend
+    // only uses Firebase for Auth, not direct Firestore access — so the
+    // correct default here is deny-all for any direct client request.
+    //
+    // Revisit this file when a feature needs the client SDK to read/listen
+    // to Firestore directly (e.g. P1 real-time workspace chat) and scope
+    // rules per-collection at that point.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
