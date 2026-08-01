@@ -42,8 +42,14 @@ and aesthetic fit, and gives both people a shared project workspace.
   Ready to Publish → Published
 - **Content signals** — AI-estimated virality/competition/trend
   indicators on each plan, clearly labeled as estimates (or as
-  research-informed, when backed by live search) rather than presented
-  as verified analytics
+  research-informed, when backed by live search) rather than presented as verified analytics. 
+  - **Live-researched content signals** — virality, competition, and trend
+  indicators are generated using real web search when available, with a clear badge distinguishing "Based on live trend research" from a euristic estimate when search isn't used — never presented as
+  verified analytics without disclosure
+- **Post-plan follow-up conversation** — once a plan is generated,
+  creators can continue the conversation to refine it (e.g. "add a
+  second location shot"), isolated from the initial planning flow so
+  it can't destabilize the core conversation state machine
 
 ## AI approach and architecture
 
@@ -71,21 +77,35 @@ decisions, and known constraints are documented in `AGENTS.md` and
 
 ## How IBM Bob was used
 
-IBM Bob was used as the primary development tool for a significant
-portion of this build. Specifically, Bob was used to:
-- Generate project context (`AGENTS.md`) by scanning the existing
-  codebase via `/init`
-- Plan and implement several feature additions in Plan mode followed by
-  Agent mode, including [fill in with your specifics — e.g. "the
-  dashboard recommendation card, extended creator profile fields,
-  content workflow stages, and content signal generation"]
-- Trace and fix a state-machine bug in the conversation flow
-  (`forceFinal` turn-cap logic not accounting for the concept-choice
-  step), verified through a full regression test of the core
-  conversation → matching → workspace flow after the fix
-- [Add anything else Bob specifically built — the live-trend-research
-  content signals, post-plan conversation continuation, etc., if those
-  landed]
+IBM Bob was used as the primary development tool for a substantial
+portion of this build, working in Plan mode followed by Agent mode for
+each feature. Specifically, Bob was used to:
+
+- Generate project context (`AGENTS.md`) by auditing the existing
+  codebase via `/init`, which surfaced real architectural constraints
+  (e.g. the frontend never touches Firestore directly; Firestore rules
+  are deny-all by design) that shaped every subsequent change
+- Extend the creator profile with new fields (target audience, content
+  goals, posting frequency, equipment) and standardize label
+  formatting across the app via a shared `label()` helper
+- Rebuild the dashboard recommendation feature from a single suggestion
+  into an array of 2-4 trend-based content ideas
+- Implement content signals (virality, competition, trend growth,
+  audience match, estimated reach) with a two-step approach: a live
+  web-search call to Anthropic's API for real trend context, falling
+  back to heuristic AI reasoning when search isn't useful — with the
+  UI honestly distinguishing which one produced a given result via a
+  `signals_source` field
+- Design and build a post-plan follow-up conversation mode, isolated
+  from the core planning conversation via a separate `followup_history`
+  array and endpoint, specifically to avoid destabilizing the
+  `forceFinal`/concept-choice state machine that governs initial plan
+  generation
+- Trace and fix a real state-machine bug in the conversation flow
+  (`forceFinal`'s turn-cap logic not accounting for the concept-choice
+  step), and fix an unhandled-rejection crash in the profiles
+  controller — both verified via full regression tests of the core
+  conversation → matching → workspace flow
 
 ## Tech stack
 
